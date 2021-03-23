@@ -1,0 +1,8 @@
+package fp-course
+
+sourcedir = "src"
+
+modules = Course
+        , Course.Core
+
+opts = "--no-prelude"
