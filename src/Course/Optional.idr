@@ -3,18 +3,24 @@ module Course.Optional
 import Course.Core
 import Prelude
 
+%default total
+
 -- | The `Optional` data type contains 0 or 1 value.
 --
 -- It might be thought of as a list, with a maximum length of one.
-data Optional a =
-  Full a
-  | Empty
+data Optional a = Full a
+                | Empty
 
-Eq (Optional a) where
-  x == y = ?eqhole
+-- Eq & Show allow easy comparison and printing of Optional
+-- values.
+Eq a => Eq (Optional a) where
+  (Full x) == (Full y) = x == y
+  Empty    == Empty    = True
+  _        == _        = False
 
-Show (Optional a) where
-  show x = ?showhole
+Show a => Show (Optional a) where
+  show Empty    = "Empty"
+  show (Full x) = "Full " ++ (show x)
 
 -- | Map the given function on the possible value.
 --
@@ -27,8 +33,9 @@ mapOptional :
   (a -> b)
   -> Optional a
   -> Optional b
-mapOptional =
-  ?mapOptional_rhs
+mapOptional f (Full x) = Full (f x)
+mapOptional f Empty = Empty
+--   ?mapOptional_rhs
 
 -- | Bind the given function on the possible value.
 --
@@ -44,8 +51,11 @@ bindOptional :
   (a -> Optional b)
   -> Optional a
   -> Optional b
-bindOptional =
-  ?bindOptional_rhs
+bindOptional f Empty = Empty
+bindOptional f (Full x) = case f x of
+                               (Full y) => Full y
+                               Empty => Empty
+--   ?bindOptional_rhs
 
 -- | Return the possible value if it exists; otherwise, the second argument.
 --
@@ -58,8 +68,11 @@ bindOptional =
   Optional a
   -> a
   -> a
-(??) =
-  ?coalesce_rhs
+(??) (Full x) _ = x
+(??) Empty y = y
+--   ?coalesce_rhs
+
+infixl 2 ??
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
 -- use the second value.
@@ -79,8 +92,8 @@ bindOptional =
   Optional a
   -> Optional a
   -> Optional a
-(<+>) =
-  ?combine_rhs
+(<+>) (Full x) _ = Full x
+(<+>) Empty y = y
 
 -- | Replaces the Full and Empty constructors in an optional.
 --
@@ -94,8 +107,8 @@ optional :
   -> b
   -> Optional a
   -> b
-optional =
-  ?eliminate_rhs
+optional f empty (Full x) = f x
+optional f empty Empty = empty
 
 applyOptional : Optional (a -> b) -> Optional a -> Optional b
 applyOptional f a = bindOptional (\f' => mapOptional f' a) f
