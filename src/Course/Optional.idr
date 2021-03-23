@@ -3,18 +3,24 @@ module Course.Optional
 import Course.Core
 import Prelude
 
+%default total
+
 -- | The `Optional` data type contains 0 or 1 value.
 --
 -- It might be thought of as a list, with a maximum length of one.
-data Optional a =
-  Full a
-  | Empty
+data Optional a = Full a
+                | Empty
 
-Eq (Optional a) where
-  x == y = ?eqhole
+-- Eq & Show allow easy comparison and printing of Optional
+-- values.
+Eq a => Eq (Optional a) where
+  (Full x) == (Full y) = x == y
+  Empty    == Empty    = True
+  _        == _        = False
 
-Show (Optional a) where
-  show x = ?showhole
+Show a => Show (Optional a) where
+  show Empty    = "Empty"
+  show (Full x) = "Full " ++ (show x)
 
 -- | Map the given function on the possible value.
 --
@@ -60,6 +66,8 @@ bindOptional =
   -> a
 (??) =
   ?coalesce_rhs
+
+infixl 2 ??
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
 -- use the second value.
